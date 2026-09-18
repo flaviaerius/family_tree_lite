@@ -1,0 +1,21 @@
+name,sex,generation,nucleus,birth_year,death_year,short_name,birth_date,mother_name,father_name,partner_name,image_file
+Raiz Um,M,1,Fundador,1900,NA,Raiz,NA,Bisa Ausente,Bisavo Ausente,Raiz Dois,NA
+Raiz Dois,F,1,Fundador,1902,NA,Dois,NA,NA,NA,Raiz Um,NA
+Pai Multi,M,2,Ramo A,1930,NA,Pai,NA,Raiz Dois,Raiz Um,Esposa Atual,NA
+Esposa Atual,F,2,Ramo A,1932,NA,Esposa,NA,NA,NA,Pai Multi,NA
+Filho Atual,M,3,Ramo A,1960,NA,FilhoA,NA,Esposa Atual,Pai Multi,Nora,NA
+Filha Ph1,F,3,Ramo A,1955,NA,FilhaP1,NA,placeholder_1,Pai Multi,NA,NA
+Filho Ph1,M,3,Ramo A,1957,NA,FilhoP1,NA,placeholder_1,Pai Multi,NA,NA
+Filha Ph2,F,3,Ramo A,1950,NA,FilhaP2,NA,placeholder_2,Pai Multi,NA,NA
+Mae Nomeada,F,2,Ramo B,1935,NA,MaeN,NA,Raiz Dois,Raiz Um,NA,NA
+Filho Nomeado,M,3,Ramo B,1965,NA,FilhoN,1965-07-09,Mae Nomeada,Pai Sem Ficha,NA,NA
+Solteiro,M,2,Ramo C,1938,NA,Solteiro,NA,Raiz Dois,Raiz Um,NA,NA
+Filha Solteiro,F,3,Ramo C,1970,NA,FilhaS,NA,NA,Solteiro,NA,NA
+Nora,F,3,Ramo A,1962,NA,Nora,NA,NA,NA,Filho Atual,NA
+Neto Um,M,4,Ramo A,1985,NA,Neto1,NA,Nora,Filho Atual,NA,NA
+Neto Dois,M,4,Ramo A,1987,NA,Neto2,NA,Nora,Filho Atual,NA,NA
+Neto Tres,F,4,Ramo A,1989,NA,Neto3,NA,Nora,Filho Atual,NA,NA
+Neto Quatro,F,4,Ramo A,1991,NA,Neto4,NA,Nora,Filho Atual,NA,NA
+Neto Cinco,M,4,Ramo A,1993,NA,Neto5,NA,Nora,Filho Atual,NA,NA
+Maria Cavalcante,F,2,Ramo D,1940,NA,Maria,NA,Raiz Dois,Raiz Um,Fulano da Silva,NA
+Fulano da Silva,M,2,Ramo D,1938,NA,Fulano,NA,NA,NA,Maria Cavalcante,NA
