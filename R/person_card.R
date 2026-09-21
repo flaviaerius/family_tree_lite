@@ -1,5 +1,12 @@
 # Cartão da pessoa buscada, na barra lateral: foto, nome completo, aniversário e
-# parentesco. Ocupa o espaço que antes era gasto documentando as colunas do CSV.
+# parentesco. Ocupa o espaço que antes era gasto documentando as colunas do CSV
+# (que agora moram no modal "Como usar", em R/help_modal.R).
+#
+# O cartão inteiro é o botão que abre a árvore focada: clicar numa bola da
+# árvore geral só traz o cartão, e o zoom em pais/cônjuge/filhos sai daqui.
+# Por isso a chamada é um `div` e não um `actionButton` — o clique é capturado
+# uma única vez, no cartão, em vez de disparar `show_tree` duas vezes (no botão
+# e de novo ao borbulhar para o cartão).
 
 # Como citar alguém que aparece só como parente. Um placeholder não tem ficha,
 # então não adianta mostrar o nome interno ("placeholder_1") como se fosse gente.
@@ -91,6 +98,16 @@ person_card_ui <- function(family, name) {
   }
 
   tags$div(
+    class = "person-card",
+    role = "button",
+    tabindex = "0",
+    title = "Ver a árvore desta pessoa",
+    onclick = "Shiny.setInputValue('show_tree', Date.now(), {priority: 'event'});",
+    onkeydown = paste0(
+      "if (event.key === 'Enter' || event.key === ' ') { ",
+      "event.preventDefault(); ",
+      "Shiny.setInputValue('show_tree', Date.now(), {priority: 'event'}); }"
+    ),
     style = paste0(
       "border:1px solid #E5E8EA;border-left:4px solid ",
       accent,
@@ -135,11 +152,15 @@ person_card_ui <- function(family, name) {
       rel_line("Cônjuge:", person_ref_label(partner_of(family, name))),
       rel_line("Filhos:", kid_names)
     ),
-    actionButton(
-      "show_tree",
-      "Ver árvore desta pessoa",
-      class = "btn-sm btn-primary",
-      style = "margin-top:10px;width:100%;"
+    tags$div(
+      class = "person-card-cta",
+      style = paste0(
+        "margin-top:10px;padding:5px 8px;border-radius:4px;text-align:center;",
+        "font-size:0.78rem;font-weight:600;color:#FFF;background:",
+        accent,
+        ";"
+      ),
+      "Ver árvore desta pessoa"
     )
   )
 }

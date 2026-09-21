@@ -55,8 +55,17 @@ ui <- bslib::page_navbar(
       bootswatch = "flatly",
       primary = "#7D3C98"
     ),
-    ".navbar .nav-link, .navbar .nav-link.active { color: #F5EFE0 !important; }"
+    c(
+      ".navbar .nav-link, .navbar .nav-link.active { color: #F5EFE0 !important; }",
+      # O cartão da barra lateral é clicável por inteiro (ver R/person_card.R):
+      # precisa parecer clicável.
+      ".person-card { cursor: pointer; transition: box-shadow .15s ease; }",
+      ".person-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,.14); }",
+      ".person-card:focus-visible { outline: 2px solid #7D3C98; outline-offset: 2px; }",
+      ".person-card:hover .person-card-cta { filter: brightness(1.12); }"
+    )
   ),
+
 
   bslib::nav_panel(
     title = "Carregar CSV",
@@ -93,11 +102,23 @@ ui <- bslib::page_navbar(
         plotlyOutput("csv_plot", height = "780px")
       )
     )
+  ),
+
+  # Depois do painel e do espaçador: a aba fica à esquerda e o atalho para o
+  # modal de instruções (R/help_modal.R) encosta na direita da barra.
+  bslib::nav_spacer(),
+  bslib::nav_item(
+    actionLink("show_help", "Como usar", class = "nav-link")
   )
 )
 
 server <- function(input, output, session) {
   focus_name <- reactiveVal(NULL)
+
+  # Explica o formato do CSV e o das fotos antes de a pessoa procurar o que
+  # carregar; continua a um clique de distância pelo link "Como usar".
+  showModal(help_modal())
+  observeEvent(input$show_help, showModal(help_modal()))
 
   # Per-session scratch folder for cropped photos; removed when the session ends.
   work_dir <- tempfile("photos_")
@@ -169,8 +190,10 @@ server <- function(input, output, session) {
     }
   })
 
-  # A busca preenche o cartão da barra lateral. A árvore focada abre pelo botão
-  # do cartão: abrindo-a na hora, como antes, o modal tapava o próprio cartão.
+  # Buscar pelo nome e clicar numa bola da árvore fazem a mesma coisa: preencher
+  # o cartão da barra lateral. A árvore focada só abre pelo clique no cartão —
+  # abrindo-a junto, como antes, o modal tapava o próprio cartão que a pessoa
+  # tinha acabado de pedir.
   observeEvent(input$name, {
     if (!is.null(input$name) && nzchar(input$name)) {
       focus_name(input$name)
@@ -199,7 +222,6 @@ server <- function(input, output, session) {
       selected = nm,
       server = TRUE
     )
-    showModal(focused_modal())
   })
 
   observeEvent(plotly::event_data("plotly_click", source = "focused"), {
