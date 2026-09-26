@@ -82,6 +82,12 @@ ui <- bslib::page_navbar(
         ),
         uiOutput("person_card"),
         tags$hr(),
+        actionButton(
+          "use_example",
+          "Usar CSV exemplo",
+          icon = icon("wand-magic-sparkles"),
+          class = "btn-outline-primary w-100 mb-3"
+        ),
         fileInput(
           "csv_upload",
           "Escolher CSV",
@@ -146,14 +152,11 @@ server <- function(input, output, session) {
     )
   }
 
-  observeEvent(input$csv_upload, {
-    f <- input$csv_upload
-    if (is.null(f)) {
-      return()
-    }
+  # Mesmo caminho para o CSV enviado e para o exemplo embutido.
+  load_csv_path <- function(path) {
     tryCatch(
       {
-        fam <- load_family_csv(f$datapath)
+        fam <- load_family_csv(path)
         csv_family(fam)
         csv_error(NULL)
       },
@@ -167,6 +170,17 @@ server <- function(input, output, session) {
         )
       }
     )
+  }
+
+  observeEvent(input$csv_upload, {
+    f <- input$csv_upload
+    if (!is.null(f)) load_csv_path(f$datapath)
+  })
+
+  # Exemplo para quem quer ver o app funcionando sem preparar um CSV.
+  observeEvent(input$use_example, {
+    load_csv_path("tests/fixtures/family_sample.csv")
+    removeModal()
   })
 
   # Placeholders existem só para nenhum ramo ficar solto no desenho (ver
