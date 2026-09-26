@@ -1,6 +1,7 @@
 FROM rocker/r-ver:4.5
 
-RUN apt-get -y update; apt-get -y install curl
+# curl: to install rv | libuv1t64: runtime dependency of the R package fs (used by bslib/sass)
+RUN apt-get -y update && apt-get -y install curl libuv1t64 && rm -rf /var/lib/apt/lists/*
 
 # install rv binary
 RUN curl -sSL https://raw.githubusercontent.com/A2-ai/rv/refs/heads/main/scripts/install.sh | bash

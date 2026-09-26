@@ -2,7 +2,6 @@
 .gitignore
 .Rhistory
 rsconnect/
-tests/
 todo
 LICENSE
 rv/library
