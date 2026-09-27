@@ -16,5 +16,5 @@ RUN rv sync
 # copy shiny app code to the docker image workdir (app)
 COPY . .
 
-EXPOSE 3838
-CMD ["R", "-e", "shiny::runApp('/app', host='0.0.0.0', port=3838)"]
+EXPOSE 8080
+CMD ["R", "-e", "shiny::runApp('/app', host='0.0.0.0', port=8080)"]
