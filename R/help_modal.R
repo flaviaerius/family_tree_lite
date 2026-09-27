@@ -1,7 +1,6 @@
-# Modal de boas-vindas: explica o formato do CSV e o das fotos.
-#
-# Aparece sozinho quando o app abre e pode ser reaberto pelo link "Como usar" da
-# barra superior. As specs das colunas moravam na barra lateral; saíram de lá
+# Modais de entrada: welcome_modal() é o que abre com o app (carregar CSV ou
+# usar o exemplo); help_modal() explica o formato do CSV e o das fotos, aberto
+# pelo botão do welcome_modal ou pelo link "Como usar" da barra superior. As specs das colunas moravam na barra lateral; saíram de lá
 # para o cartão de busca ocupar o espaço (todo/features.md, item 5) e é aqui que
 # elas passaram a viver.
 
@@ -57,12 +56,44 @@ HELP_CSV_EXAMPLE <- paste(
   sep = "\n"
 )
 
+# IDs próprios (sufixo _start): os da barra lateral já existem na página.
+welcome_modal <- function() {
+  modalDialog(
+    title = "Árvore Genealógica",
+    easyClose = TRUE,
+    footer = modalButton("Fechar"),
+    fileInput(
+      "csv_upload_start",
+      "Insira seu CSV aqui",
+      accept = c(".csv", "text/csv"),
+      buttonLabel = "Procurar...",
+      placeholder = "Nenhum arquivo selecionado",
+      width = "100%"
+    ),
+    actionButton(
+      "use_example_start",
+      "Usar CSV exemplo",
+      icon = icon("wand-magic-sparkles"),
+      class = "btn-outline-primary w-100 mb-2"
+    ),
+    actionButton(
+      "show_help_start",
+      "Informações sobre formato do CSV",
+      icon = icon("circle-info"),
+      class = "btn-link w-100"
+    )
+  )
+}
+
 help_modal <- function() {
   modalDialog(
     title = "Como montar a sua árvore",
     size = "l",
     easyClose = TRUE,
-    footer = modalButton("Entendi, vamos começar"),
+    footer = tagList(
+      actionButton("back_to_start", "Voltar"),
+      modalButton("Fechar")
+    ),
 
     # HTML() em vez de tags$strong() solto: o htmltools separa filhos com quebra
     # de linha, e o espaço resultante antes do ":" aparece no texto renderizado.

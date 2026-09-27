@@ -121,10 +121,12 @@ ui <- bslib::page_navbar(
 server <- function(input, output, session) {
   focus_name <- reactiveVal(NULL)
 
-  # Explica o formato do CSV e o das fotos antes de a pessoa procurar o que
-  # carregar; continua a um clique de distância pelo link "Como usar".
-  showModal(help_modal())
+  # Abre pedindo o CSV (ou o exemplo); as instruções ficam a um clique, no
+  # próprio modal ou no link "Como usar".
+  showModal(welcome_modal())
   observeEvent(input$show_help, showModal(help_modal()))
+  observeEvent(input$show_help_start, showModal(help_modal()))
+  observeEvent(input$back_to_start, showModal(welcome_modal()))
 
   # Per-session scratch folder for cropped photos; removed when the session ends.
   work_dir <- tempfile("photos_")
@@ -172,16 +174,19 @@ server <- function(input, output, session) {
     )
   }
 
-  observeEvent(input$csv_upload, {
-    f <- input$csv_upload
-    if (!is.null(f)) load_csv_path(f$datapath)
+  observeEvent(input$csv_upload, load_csv_path(input$csv_upload$datapath))
+  observeEvent(input$csv_upload_start, {
+    load_csv_path(input$csv_upload_start$datapath)
+    removeModal()
   })
 
   # Exemplo para quem quer ver o app funcionando sem preparar um CSV.
-  observeEvent(input$use_example, {
+  use_example <- function() {
     load_csv_path("tests/fixtures/family_sample.csv")
     removeModal()
-  })
+  }
+  observeEvent(input$use_example, use_example())
+  observeEvent(input$use_example_start, use_example())
 
   # Placeholders existem só para nenhum ramo ficar solto no desenho (ver
   # R/placeholders.R): não são gente que se busque, se conte ou em que se clique.
