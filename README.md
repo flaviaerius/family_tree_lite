@@ -147,7 +147,6 @@ R/
   colors.R, utils_*.R  Palettes and helpers
 www/tree_scale.js      Scales labels with the browser zoom
 tests/                 testthat suite and sample CSV
-todo/                  Notes on known bugs and planned features
 rproject.toml          rv project definition (R version, repositories, packages)
 rv.lock                Locked package versions
 ```
