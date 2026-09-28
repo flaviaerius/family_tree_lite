@@ -2,3 +2,4 @@
 rsconnect/
 .env/
 todo/
+scripts/deploy_shinyio.R

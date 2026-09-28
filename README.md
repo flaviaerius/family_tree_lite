@@ -6,7 +6,7 @@ An interactive family tree viewer built with [Shiny](https://shiny.posit.co/). U
 
 ## Live app
 
-The app is publicly available at **[https://x](https://x)**.
+The app is publicly available at **https://flaviaerius.shinyapps.io/family_tree_lite/**.
 
 Nothing is stored on the server: the CSV and photos you upload live only in your browser session and are discarded when you close the app (see [Privacy](#privacy)).
 
