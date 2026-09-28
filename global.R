@@ -3,7 +3,6 @@ suppressPackageStartupMessages({
   library(bslib)
   library(plotly)
   library(dplyr)
-  library(tibble)
   library(stringr)
   library(htmltools)
   library(base64enc)

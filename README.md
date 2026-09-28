@@ -1,3 +1,5 @@
+<img src="www/img/logo_family_tree_lite_texture.jpg" align="right" width="100" alt="Family Tree Lite logo">
+
 # Family Tree Lite
 
 An interactive family tree viewer built with [Shiny](https://shiny.posit.co/). Upload a CSV with one row per person (and, optionally, a folder of photos) and the app draws the whole family as a clickable tree: people are colored by family branch, couples are joined, and children hang from their parents.
