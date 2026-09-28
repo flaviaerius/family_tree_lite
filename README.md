@@ -1,4 +1,4 @@
-<img src="www/img/logo_family_tree_lite_texture.jpg" align="right" width="100" alt="Family Tree Lite logo">
+<img src="www/img/logo_family_tree_lite_texture.jpg" align="right" width="75" alt="Family Tree Lite logo">
 
 # Family Tree Lite
 
