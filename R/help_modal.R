@@ -1,8 +1,9 @@
-# Modais de entrada: welcome_modal() é o que abre com o app (carregar CSV ou
-# usar o exemplo); help_modal() explica o formato do CSV e o das fotos, aberto
-# pelo botão do welcome_modal ou pelo link "Como usar" da barra superior. As specs das colunas moravam na barra lateral; saíram de lá
-# para o cartão de busca ocupar o espaço (todo/features.md, item 5) e é aqui que
-# elas passaram a viver.
+# Modais de entrada: welcome_modal() é o que abre com o app e o ÚNICO lugar
+# onde se carrega o CSV, as fotos ou o exemplo (reaberto pelo link "Carregar
+# dados" da barra superior); help_modal() explica o formato do CSV e o das
+# fotos, aberto pelo botão do welcome_modal ou pelo link "Como usar". As specs
+# das colunas moravam na barra lateral; saíram de lá para o cartão de busca
+# ocupar o espaço (todo/features.md, item 5) e é aqui que elas passaram a viver.
 
 # Uma linha da tabela de colunas.
 help_col_row <- function(col, required, desc) {
@@ -56,31 +57,85 @@ HELP_CSV_EXAMPLE <- paste(
   sep = "\n"
 )
 
-# IDs próprios (sufixo _start): os da barra lateral já existem na página.
+# Atributos do seletor de pasta do navegador no <input type="file">, para a
+# pessoa escolher a pasta inteira de fotos de uma vez. Percorre a árvore de tags
+# atrás do único input de arquivo, o que funciona em qualquer versão do Shiny
+# (tagQuery não tem seletor por atributo).
+add_dir_attrs <- function(tag) {
+  if (inherits(tag, "shiny.tag")) {
+    if (identical(tag$name, "input") && identical(tag$attribs$type, "file")) {
+      tag$attribs$webkitdirectory <- ""
+      tag$attribs$directory <- ""
+      tag$attribs$mozdirectory <- ""
+    }
+    tag$children <- lapply(tag$children, add_dir_attrs)
+  } else if (is.list(tag)) {
+    tag <- lapply(tag, add_dir_attrs)
+  }
+  tag
+}
+
+folder_input <- function(id, label) {
+  add_dir_attrs(fileInput(
+    id,
+    label,
+    multiple = TRUE,
+    buttonLabel = "Escolher pasta...",
+    accept = c("image/png", "image/jpeg"),
+    placeholder = "Nenhuma pasta selecionada",
+    width = "100%"
+  ))
+}
+
+# O CSV carrega assim que é escolhido, mas o modal só fecha no "Ver árvore":
+# assim dá tempo de escolher as fotos também. `load_status` (no servidor) diz o
+# que já foi carregado.
 welcome_modal <- function() {
   modalDialog(
     title = "Árvore Genealógica",
     easyClose = TRUE,
-    footer = modalButton("Fechar"),
+    footer = tagList(
+      actionLink(
+        "show_help_start",
+        "Formato do CSV e das fotos",
+        icon = icon("circle-info"),
+        class = "me-auto"
+      ),
+      tags$button(
+        type = "button",
+        class = "btn btn-primary",
+        `data-bs-dismiss` = "modal",
+        "Ver árvore"
+      )
+    ),
     fileInput(
-      "csv_upload_start",
-      "Insira seu CSV aqui",
+      "csv_upload",
+      "1. Escolha o CSV da família",
       accept = c(".csv", "text/csv"),
       buttonLabel = "Procurar...",
       placeholder = "Nenhum arquivo selecionado",
       width = "100%"
     ),
-    actionButton(
-      "use_example_start",
-      "Usar CSV exemplo",
-      icon = icon("wand-magic-sparkles"),
-      class = "btn-outline-primary w-100 mb-2"
+    folder_input("photos", "2. Fotos (opcional): escolha a pasta"),
+    tags$div(
+      class = "form-text",
+      style = "margin-top:-8px;margin-bottom:10px;",
+      "Os nomes dos arquivos devem bater com a coluna ",
+      tags$code("image_file"),
+      " do CSV. As fotos ficam só nesta sessão."
+    ),
+    uiOutput("load_status"),
+    tags$div(
+      style = "display:flex;align-items:center;gap:10px;margin:14px 0 4px;color:#95A5A6;font-size:0.8rem;",
+      tags$hr(style = "flex:1;margin:0;"),
+      "ou",
+      tags$hr(style = "flex:1;margin:0;")
     ),
     actionButton(
-      "show_help_start",
-      "Informações sobre formato do CSV",
-      icon = icon("circle-info"),
-      class = "btn-link w-100"
+      "use_example",
+      "Usar CSV exemplo",
+      icon = icon("wand-magic-sparkles"),
+      class = "btn-outline-primary w-100"
     )
   )
 }

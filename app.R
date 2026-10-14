@@ -15,39 +15,11 @@ suppressWarnings(Sys.setlocale("LC_COLLATE", "UTF-8"))
 # (see resolve_uploaded_images in R/uploaded_images.R) — nothing is pre-generated
 # or served as a static file.
 
-# Set the browser's directory-picker attributes on the file <input> so the user
-# chooses a whole folder of photos at once. Walks the tag tree to find the single
-# file input, which is robust across Shiny versions (tagQuery has no attribute
-# selectors).
-add_dir_attrs <- function(tag) {
-  if (inherits(tag, "shiny.tag")) {
-    if (identical(tag$name, "input") && identical(tag$attribs$type, "file")) {
-      tag$attribs$webkitdirectory <- ""
-      tag$attribs$directory <- ""
-      tag$attribs$mozdirectory <- ""
-    }
-    tag$children <- lapply(tag$children, add_dir_attrs)
-  } else if (is.list(tag)) {
-    tag <- lapply(tag, add_dir_attrs)
-  }
-  tag
-}
-
-# A folder upload: a multi-file input that lets the user pick a whole folder.
-folder_input <- function(id, label) {
-  add_dir_attrs(fileInput(
-    id,
-    label,
-    multiple = TRUE,
-    buttonLabel = "Escolher pasta...",
-    accept = c("image/png", "image/jpeg"),
-    placeholder = "Nenhuma pasta selecionada"
-  ))
-}
-
 ui <- bslib::page_navbar(
   title = "Árvore Genealógica",
   bg = "#1E5A3A",
+  # Só a árvore estica para caber na janela; a aba de análises rola como página.
+  fillable = "Árvore",
   header = tags$head(tags$script(src = "tree_scale.js")),
   theme = bslib::bs_add_rules(
     bslib::bs_theme(
@@ -68,11 +40,13 @@ ui <- bslib::page_navbar(
 
 
   bslib::nav_panel(
-    title = "Carregar CSV",
+    title = "Árvore",
+    # CSV e fotos entram só pelo modal (R/help_modal.R); a barra lateral fica
+    # para os aniversariantes, a busca e o cartão da pessoa.
     bslib::layout_sidebar(
       sidebar = bslib::sidebar(
         width = 380,
-        tags$hr(),
+        uiOutput("birthday_card"),
         selectizeInput(
           inputId = "name",
           label = "Buscar pessoa",
@@ -80,27 +54,7 @@ ui <- bslib::page_navbar(
           selected = NULL,
           multiple = FALSE
         ),
-        uiOutput("person_card"),
-        tags$hr(),
-        actionButton(
-          "use_example",
-          "Usar CSV exemplo",
-          icon = icon("wand-magic-sparkles"),
-          class = "btn-outline-primary w-100 mb-3"
-        ),
-        fileInput(
-          "csv_upload",
-          "Escolher CSV",
-          accept = c(".csv", "text/csv"),
-          buttonLabel = "Procurar...",
-          placeholder = "Nenhum arquivo selecionado"
-        ),
-        folder_input("photos", "Insira aqui as suas fotos"),
-        helpText(
-          "Os nomes dos arquivos devem bater com a coluna ",
-          tags$code("image_file"),
-          " do CSV. As fotos ficam só nesta sessão."
-        )
+        uiOutput("person_card")
       ),
       bslib::card(
         full_screen = TRUE,
@@ -110,9 +64,17 @@ ui <- bslib::page_navbar(
     )
   ),
 
+  bslib::nav_panel(
+    title = "Análises",
+    uiOutput("stats_panel")
+  ),
+
   # Depois do painel e do espaçador: a aba fica à esquerda e o atalho para o
   # modal de instruções (R/help_modal.R) encosta na direita da barra.
   bslib::nav_spacer(),
+  bslib::nav_item(
+    actionLink("open_start", "Carregar dados", icon = icon("upload"), class = "nav-link")
+  ),
   bslib::nav_item(
     actionLink("show_help", "Como usar", class = "nav-link")
   )
@@ -127,21 +89,25 @@ server <- function(input, output, session) {
   observeEvent(input$show_help, showModal(help_modal()))
   observeEvent(input$show_help_start, showModal(help_modal()))
   observeEvent(input$back_to_start, showModal(welcome_modal()))
+  observeEvent(input$open_start, showModal(welcome_modal()))
 
   # Per-session scratch folder for cropped photos; removed when the session ends.
   work_dir <- tempfile("photos_")
   dir.create(work_dir)
   session$onSessionEnded(function() unlink(work_dir, recursive = TRUE))
 
-  # --- CSV tab ---
+  # --- Aba da árvore ---
   csv_family <- reactiveVal(NULL)
   csv_error <- reactiveVal(NULL)
+  # O input de fotos mora no modal e some com ele: guarda-se o upload aqui.
+  photo_uploads <- reactiveVal(NULL)
+  observeEvent(input$photos, photo_uploads(input$photos))
 
   # Family data with uploaded photos resolved to embedded (base64) images.
   family_resolved <- reactive({
     fam <- csv_family()
     req(fam)
-    resolve_uploaded_images(fam, input$photos, work_dir)
+    resolve_uploaded_images(fam, photo_uploads(), work_dir)
   })
 
   focused_modal <- function() {
@@ -174,19 +140,36 @@ server <- function(input, output, session) {
     )
   }
 
+  # O modal continua aberto depois do CSV, para dar tempo de escolher as fotos.
   observeEvent(input$csv_upload, load_csv_path(input$csv_upload$datapath))
-  observeEvent(input$csv_upload_start, {
-    load_csv_path(input$csv_upload_start$datapath)
+
+  # Exemplo para quem quer ver o app funcionando sem preparar um CSV.
+  observeEvent(input$use_example, {
+    load_csv_path("tests/fixtures/family_sample.csv")
     removeModal()
   })
 
-  # Exemplo para quem quer ver o app funcionando sem preparar um CSV.
-  use_example <- function() {
-    load_csv_path("tests/fixtures/family_sample.csv")
-    removeModal()
-  }
-  observeEvent(input$use_example, use_example())
-  observeEvent(input$use_example_start, use_example())
+  output$load_status <- renderUI({
+    err <- csv_error()
+    fam <- csv_family()
+    n_photos <- NROW(photo_uploads())
+    if (!is.null(err)) {
+      return(tags$div(class = "text-danger small", icon("circle-xmark"), " ", err))
+    }
+    if (is.null(fam) && n_photos == 0) {
+      return(NULL)
+    }
+    tags$div(
+      class = "small",
+      style = "color:#1E5A3A;",
+      if (!is.null(fam)) {
+        tags$div(icon("circle-check"), " ", sum(!fam$is_placeholder), " pessoas carregadas")
+      },
+      if (n_photos > 0) {
+        tags$div(icon("circle-check"), " ", n_photos, if (n_photos == 1) " foto" else " fotos")
+      }
+    )
+  })
 
   # Placeholders existem só para nenhum ramo ficar solto no desenho (ver
   # R/placeholders.R): não são gente que se busque, se conte ou em que se clique.
@@ -224,10 +207,9 @@ server <- function(input, output, session) {
     showModal(focused_modal())
   })
 
-  observeEvent(plotly::event_data("plotly_click", source = "overview"), {
-    click <- plotly::event_data("plotly_click", source = "overview")
+  # Preenche o cartão e faz a caixa de busca acompanhar.
+  select_person <- function(nm) {
     fam <- csv_family()
-    nm <- click$customdata
     if (is.null(nm) || is.null(fam) || is_placeholder_name(fam, nm)) {
       return()
     }
@@ -241,6 +223,36 @@ server <- function(input, output, session) {
       selected = nm,
       server = TRUE
     )
+  }
+
+  observeEvent(plotly::event_data("plotly_click", source = "overview"), {
+    select_person(plotly::event_data("plotly_click", source = "overview")$customdata)
+  })
+  observeEvent(input$birthday_pick, select_person(input$birthday_pick))
+
+  # Aniversariantes do mês: fixado no topo da barra lateral até a pessoa
+  # remover; aí some pelo resto da sessão.
+  birthdays_hidden <- reactiveVal(FALSE)
+  observeEvent(input$hide_birthdays, birthdays_hidden(TRUE))
+  # Quantos meses à frente (ou atrás, se negativo) do mês atual o cartão mostra.
+  birthday_offset <- reactiveVal(0L)
+  observeEvent(input$birthday_nav, {
+    step <- as.integer(input$birthday_nav$step)
+    birthday_offset(if (step == 0L) 0L else birthday_offset() + step)
+  })
+  output$birthday_card <- renderUI({
+    fam <- csv_family()
+    if (is.null(fam) || birthdays_hidden()) {
+      return(NULL)
+    }
+    today <- Sys.Date()
+    first_of_month <- as.Date(format(today, "%Y-%m-01"))
+    view <- if (birthday_offset() == 0L) {
+      first_of_month
+    } else {
+      seq(first_of_month, by = paste(birthday_offset(), "months"), length.out = 2)[2]
+    }
+    birthday_card_ui(fam, view = view, today = today)
   })
 
   observeEvent(plotly::event_data("plotly_click", source = "focused"), {
@@ -292,7 +304,7 @@ server <- function(input, output, session) {
             xaxis = list(visible = FALSE),
             yaxis = list(visible = FALSE),
             annotations = list(list(
-              text = "Carregue um CSV na barra lateral para ver a árvore.",
+              text = "Clique em Carregar dados para começar.",
               x = 0.5,
               y = 0.5,
               xref = "paper",
@@ -313,6 +325,146 @@ server <- function(input, output, session) {
     req(fn, csv_family())
     render_focused(family_resolved(), fn)
   })
+
+  # --- Aba de análises ---
+  stats <- reactive({
+    fam <- csv_family()
+    req(fam)
+    family_stats(fam)
+  })
+
+  # Um gráfico dentro de uma seção: título pequeno, sem moldura própria — a
+  # moldura é a da seção.
+  stats_chart <- function(title, output_id, height = "340px") {
+    tags$div(
+      tags$h6(class = "mb-2", style = "color:#566573;font-weight:600;", title),
+      plotlyOutput(output_id, height = height)
+    )
+  }
+
+  # Seção que agrupa gráficos do mesmo tema num retângulo maior.
+  stats_section <- function(title, icon_name, ...) {
+    bslib::card(
+      class = "mb-3",
+      bslib::card_header(
+        class = "fs-5 fw-semibold",
+        style = "color:#1E5A3A;",
+        icon(icon_name, class = "me-2"),
+        title
+      ),
+      bslib::card_body(...)
+    )
+  }
+
+  output$stats_panel <- renderUI({
+    if (is.null(csv_family())) {
+      return(bslib::card(
+        bslib::card_body(
+          class = "text-center text-muted py-5",
+          "Clique em ",
+          tags$b("Carregar dados"),
+          ", na barra superior, para escolher o CSV (ou usar o exemplo)."
+        )
+      ))
+    }
+    st <- stats()
+    o <- st$overview
+    # Gráficos com uma barra por núcleo crescem com o número de núcleos.
+    n_nuclei <- nrow(st$by_nucleus)
+    nucleus_height <- paste0(max(260, 60 + 42 * n_nuclei), "px")
+    top_height <- paste0(max(340, 90 + 42 * (n_nuclei + 1)), "px")
+
+    age_detail <- paste0("entre ", o$n_age_alive, " pessoas vivas")
+    if (o$n_age_death > 0) {
+      age_detail <- paste0(
+        age_detail, " · ao falecer: ", format_num(o$mean_age_death, 0),
+        " anos (", o$n_age_death, ")"
+      )
+    }
+
+    sex_icon <- function(name, sex) {
+      icon(name, style = paste0("color: ", SEX_COLORS[[sex]], ";"))
+    }
+
+    tagList(
+      bslib::layout_column_wrap(
+        width = "200px",
+        fill = FALSE,
+        bslib::value_box(
+          title = "Pessoas",
+          value = o$n,
+          showcase = icon("users"),
+          paste(o$n_nuclei, ifelse(o$n_nuclei == 1, "núcleo", "núcleos"))
+        ),
+        bslib::value_box(
+          title = "Gerações",
+          value = o$n_generations,
+          showcase = icon("layer-group"),
+          paste0(o$n_alive, " vivos · ", o$n_deceased, " falecidos")
+        ),
+        bslib::value_box(
+          title = "Idade média (vivos)",
+          value = paste(format_num(o$mean_age_alive, 0), "anos"),
+          showcase = icon("cake-candles"),
+          age_detail
+        ),
+        bslib::value_box(
+          title = "Mulheres",
+          value = format_pct(o$n_f, o$n),
+          showcase = sex_icon("venus", "F"),
+          paste(o$n_f, ifelse(o$n_f == 1, "mulher", "mulheres"))
+        ),
+        bslib::value_box(
+          title = "Homens",
+          value = format_pct(o$n_m, o$n),
+          showcase = sex_icon("mars", "M"),
+          paste(o$n_m, ifelse(o$n_m == 1, "homem", "homens")),
+          if (o$n_sex_unknown > 0) {
+            tags$div(class = "small", o$n_sex_unknown, " sem sexo informado")
+          }
+        )
+      ),
+      stats_section(
+        "Gênero",
+        "venus-mars",
+        bslib::layout_column_wrap(
+          width = 1 / 2,
+          fill = FALSE,
+          gap = "2rem",
+          stats_chart("Pessoas por geração", "stats_by_generation", top_height),
+          stats_chart("Proporção feminino/masculino por núcleo", "stats_sex_by_nucleus", top_height)
+        )
+      ),
+      stats_section(
+        "Geração",
+        "layer-group",
+        bslib::layout_column_wrap(
+          width = 1 / 2,
+          fill = FALSE,
+          gap = "2rem",
+          stats_chart("Pessoas por núcleo", "stats_by_nucleus", nucleus_height),
+          stats_chart("Gerações em cada núcleo", "stats_generations_by_nucleus", nucleus_height)
+        ),
+        stats_chart(
+          "Idades por núcleo (pessoas vivas)",
+          "stats_age_by_nucleus",
+          paste0(max(280, 110 + 70 * n_nuclei), "px")
+        )
+      ),
+      helpText(
+        class = "mb-4",
+        "Contam só as pessoas da família: os fundadores (a geração mais antiga) ",
+        "e seus descendentes. Cônjuges e pais citados sem linha própria ficam ",
+        "de fora. Quem não tem ", tags$code("death_year"), " é considerado vivo."
+      )
+    )
+  })
+
+  output$stats_by_generation <- renderPlotly(plot_people_by_generation(stats()))
+  output$stats_sex_by_nucleus <- renderPlotly(plot_sex_by_nucleus(stats()))
+  output$stats_by_nucleus <- renderPlotly(plot_people_by_nucleus(stats()))
+  output$stats_generations_by_nucleus <- renderPlotly(plot_generations_by_nucleus(stats()))
+  output$stats_age_by_nucleus <- renderPlotly(plot_age_by_nucleus(stats()))
 }
 
 shinyApp(ui, server)

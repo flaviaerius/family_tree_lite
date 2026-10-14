@@ -15,12 +15,15 @@ Nothing is stored on the server: the CSV and photos you upload live only in your
 ## Features
 
 - **Full-family overview** — every person as a circle, laid out by generation, colored by branch (`nucleus`), with partners and parent–child links drawn.
+- **Loading data** — the CSV, the photo folder and the built-in example are all loaded from the start-up modal, which **Carregar dados** in the top bar reopens at any time.
 - **Search** — find a person by name; the sidebar shows their card (full name, birthday, photo, parents, partner).
+- **Birthdays of the month** — a card pinned to the top of the sidebar lists the month's birthdays (family members and their current partners with a `birth_date`; ex-partners are left out, deceased people are shown in grey), with generation and nucleus; the arrows move to previous and next months, clicking a name opens their card, and × closes it.
 - **Focused tree** — click a person's card to open a zoomed view with just that person, their parents, partner and children.
 - **Click to explore** — clicking a circle in the overview fills the sidebar card, the same as searching.
+- **Family analytics** — the **Análises** tab summarizes the family: number of people, generations and nuclei, mean age of living people, the youngest and oldest age in each nucleus (one dot per person inside a box in the nucleus color) (and age at death when `death_year` is filled in), % of women and men, people per generation and per nucleus, how many generations each nucleus spans, and the female/male ratio overall and per nucleus — grouped into a **Gênero** and a **Geração** section. Only family members are counted — the founders (oldest generation) and their descendants; partners who married in and placeholders are left out.
 - **Photos (optional)** — upload a folder of JPG/PNG files; each photo is cropped to a circle automatically. People without a photo show the initial of their name.
 - **Missing parents handled** — a parent or partner named in the CSV who has no row of their own gets a placeholder so no branch is left dangling in the drawing. Placeholders are not searchable or clickable.
-- **Built-in example** — the **Usar CSV exemplo** button loads a sample family so you can try the app without preparing any data.
+- **Built-in example** — the **Usar CSV exemplo** button in the start-up modal loads a sample family so you can try the app without preparing any data.
 
 ## Using the app
 
