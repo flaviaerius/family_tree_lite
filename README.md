@@ -27,9 +27,9 @@ Nothing is stored on the server: the CSV and photos you upload live only in your
 
 ## Using the app
 
-Click **Como usar** in the top bar at any time to reopen the in-app instructions.
+Click in **Como usar** in the upper right corner at any time to reopen the in-app instructions.
 
-### 1. The CSV
+### 1. The input CSV
 
 Comma-separated, UTF-8 encoded (so accents work), with these column names in the first row:
 
