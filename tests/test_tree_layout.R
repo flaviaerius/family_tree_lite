@@ -153,19 +153,35 @@ test_that("o tracejado só aparece para quem não é o cônjuge atual", {
   expect_false(any(from_multi$xend == esposa_x))
 })
 
-test_that("format_birthday_pt cobre data completa, só ano e vazio", {
-  expect_equal(format_birthday_pt(as.Date("1992-03-14"), 1992L), "14 de março de 1992")
-  expect_equal(format_birthday_pt(NA, 1992L), "1992")
-  expect_equal(format_birthday_pt(NA, NA), "")
+test_that("format_date_pt cobre data completa, só ano e vazio", {
+  expect_equal(format_date_pt(as.Date("1992-03-14"), 1992L), "14 de março de 1992")
+  expect_equal(format_date_pt(NA, 1992L), "1992")
+  expect_equal(format_date_pt(NA, NA), "")
 })
 
-test_that("birth_date é lido e o ano é derivado dele", {
+test_that("datas aceitam DD/MM/AAAA ou só AAAA", {
+  p <- parse_partial_date(c("09/07/1965", "1938", "", NA, "julho"))
+  expect_equal(as.character(p$date), c("1965-07-09", NA, NA, NA, NA))
+  expect_equal(p$year, c(1965L, 1938L, NA, NA, NA))
+})
+
+test_that("birth_date e death_date são lidos e os anos derivados deles", {
   filho <- family[family$name == "Filho Nomeado", ]
   expect_equal(as.character(filho$birth_date), "1965-07-09")
+  expect_equal(filho$birth_year, 1965L)
   expect_equal(
-    format_birthday_pt(filho$birth_date, filho$birth_year),
+    format_date_pt(filho$birth_date, filho$birth_year),
     "9 de julho de 1965"
   )
+  fulano <- family[family$name == "Fulano da Silva", ]
+  expect_true(is.na(fulano$birth_date))
+  expect_equal(fulano$birth_year, 1938L)
+  raiz <- family[family$name == "Raiz Um", ]
+  expect_true(is.na(raiz$death_date))
+  expect_equal(raiz$death_year, 1975L)
+  dois <- family[family$name == "Raiz Dois", ]
+  expect_equal(as.character(dois$death_date), "1988-11-20")
+  expect_equal(dois$death_year, 1988L)
 })
 
 test_that("placeholders não entram no cartão como se fossem gente", {

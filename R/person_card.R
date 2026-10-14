@@ -70,9 +70,9 @@ person_card_ui <- function(family, name) {
     )
   }
 
-  born <- format_birthday_pt(person$birth_date, person$birth_year)
+  born <- format_date_pt(person$birth_date, person$birth_year)
   died <- if (!is.na(person$death_year)) {
-    paste0("Falecimento: ", person$death_year)
+    paste0("Falecimento: ", format_date_pt(person$death_date, person$death_year))
   } else {
     NULL
   }

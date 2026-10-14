@@ -50,10 +50,10 @@ help_section_title <- function(...) {
 }
 
 HELP_CSV_EXAMPLE <- paste(
-  "name,sex,generation,nucleus,birth_year,short_name,birth_date,death_year,mother_name,father_name,partner_name,image_file",
-  "Maria Cavalcante,F,1,Fundadores,1940,Maria,12/03/1940,,,,Fulano da Silva,maria.jpg",
-  "Fulano da Silva,M,1,Fundadores,1938,Fulano,,2010,,,Maria Cavalcante,fulano.jpg",
-  "Ana da Silva,F,2,Ramo Ana,1965,Ana,1965-07-09,,Maria Cavalcante,Fulano da Silva,,ana.png",
+  "name,sex,generation,nucleus,birth_date,short_name,death_date,mother_name,father_name,partner_name,image_file",
+  "Maria Cavalcante,F,1,Fundadores,12/03/1940,Maria,,,,Fulano da Silva,maria.jpg",
+  "Fulano da Silva,M,1,Fundadores,1938,Fulano,21/08/2010,,,Maria Cavalcante,fulano.jpg",
+  "Ana da Silva,F,2,Ramo Ana,09/07/1965,Ana,,Maria Cavalcante,Fulano da Silva,,ana.png",
   sep = "\n"
 )
 
@@ -174,10 +174,9 @@ help_modal <- function() {
         help_col_row("sex", TRUE, HTML("<code>M</code> ou <code>F</code>.")),
         help_col_row("generation", TRUE, "Número inteiro: 1 para a geração mais antiga, 2 para os filhos dela, e assim por diante."),
         help_col_row("nucleus", TRUE, "Nome do ramo da família. Define a cor da pessoa no desenho."),
-        help_col_row("birth_year", TRUE, "Ano de nascimento (pode ficar vazio se você preencher birth_date)."),
+        help_col_row("birth_date", TRUE, HTML("Data de nascimento, completa (<code>DD/MM/AAAA</code>) ou só o ano (<code>AAAA</code>). Com a data completa, a pessoa aparece nos aniversários do mês.")),
         help_col_row("short_name", FALSE, "Como o nome aparece dentro da bola. Vazio: usa o primeiro nome."),
-        help_col_row("birth_date", FALSE, HTML("Data completa, em <code>AAAA-MM-DD</code> ou <code>DD/MM/AAAA</code>. Aparece como aniversário no cartão.")),
-        help_col_row("death_year", FALSE, "Ano de falecimento."),
+        help_col_row("death_date", FALSE, HTML("Data de falecimento, também em <code>DD/MM/AAAA</code> ou <code>AAAA</code>. Vazio: a pessoa é considerada viva.")),
         help_col_row("mother_name", FALSE, "Nome completo da mãe, exatamente como escrito na coluna name dela."),
         help_col_row("father_name", FALSE, "Nome completo do pai, idem."),
         help_col_row("partner_name", FALSE, "Nome completo do cônjuge, idem."),

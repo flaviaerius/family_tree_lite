@@ -50,6 +50,16 @@ test_that("idade desconta o aniversário que ainda não chegou", {
   expect_equal(ages$alive, c(TRUE, TRUE, FALSE))
 })
 
+test_that("idade ao falecer desconta o aniversário com as duas datas completas", {
+  fam <- data.frame(
+    birth_year = c(1900L, 1900L),
+    death_year = c(1980L, 1980L),
+    birth_date = as.Date(c("1900-06-10", "1900-06-10")),
+    death_date = as.Date(c("1980-03-01", NA))
+  )
+  expect_equal(person_ages(fam)$age, c(79L, 80L))
+})
+
 test_that("idade mínima, máxima e média por núcleo usam só os vivos", {
   b <- stats$by_nucleus
   # Os dois fundadores faleceram: o núcleo não tem idade atual.

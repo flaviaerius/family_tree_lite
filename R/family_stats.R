@@ -42,8 +42,8 @@ is_family_member <- function(family) {
 
 # Idade de cada pessoa em `today`. Quem não tem `death_year` conta como vivo e
 # recebe a idade atual; quem tem recebe a idade com que faleceu. Com
-# `birth_date` a idade atual desconta o aniversário que ainda não chegou; só com
-# o ano, é a diferença de anos.
+# `birth_date` a idade desconta o aniversário que ainda não chegou (em `today`,
+# ou na `death_date` para quem faleceu); só com os anos, é a diferença de anos.
 person_ages <- function(family, today = Sys.Date()) {
   this_year <- as.integer(format(today, "%Y"))
   alive <- is.na(family$death_year)
@@ -53,9 +53,15 @@ person_ages <- function(family, today = Sys.Date()) {
     family$death_year - family$birth_year
   )
 
-  has_date <- alive & !is.na(family$birth_date)
+  death_date <- if ("death_date" %in% names(family)) {
+    family$death_date
+  } else {
+    as.Date(rep(NA_character_, nrow(family)))
+  }
+  ref <- ifelse(alive, format(today, "%m-%d"), format(death_date, "%m-%d"))
+  has_date <- !is.na(family$birth_date) & !is.na(ref)
   if (any(has_date)) {
-    before_bday <- format(family$birth_date[has_date], "%m-%d") > format(today, "%m-%d")
+    before_bday <- format(family$birth_date[has_date], "%m-%d") > ref[has_date]
     age[has_date][before_bday] <- age[has_date][before_bday] - 1L
   }
   age[!is.na(age) & age < 0] <- NA

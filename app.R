@@ -455,7 +455,7 @@ server <- function(input, output, session) {
         class = "mb-4",
         "Contam só as pessoas da família: os fundadores (a geração mais antiga) ",
         "e seus descendentes. Cônjuges e pais citados sem linha própria ficam ",
-        "de fora. Quem não tem ", tags$code("death_year"), " é considerado vivo."
+        "de fora. Quem não tem ", tags$code("death_date"), " é considerado vivo."
       )
     )
   })

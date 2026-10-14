@@ -20,7 +20,7 @@ Nothing is stored on the server: the CSV and photos you upload live only in your
 - **Birthdays of the month** — a card pinned to the top of the sidebar lists the month's birthdays (family members and their current partners with a `birth_date`; ex-partners are left out, deceased people are shown in grey), with generation and nucleus; the arrows move to previous and next months, clicking a name opens their card, and × closes it.
 - **Focused tree** — click a person's card to open a zoomed view with just that person, their parents, partner and children.
 - **Click to explore** — clicking a circle in the overview fills the sidebar card, the same as searching.
-- **Family analytics** — the **Análises** tab summarizes the family: number of people, generations and nuclei, mean age of living people, the youngest and oldest age in each nucleus (one dot per person inside a box in the nucleus color) (and age at death when `death_year` is filled in), % of women and men, people per generation and per nucleus, how many generations each nucleus spans, and the female/male ratio overall and per nucleus — grouped into a **Gênero** and a **Geração** section. Only family members are counted — the founders (oldest generation) and their descendants; partners who married in and placeholders are left out.
+- **Family analytics** — the **Análises** tab summarizes the family: number of people, generations and nuclei, mean age of living people, the youngest and oldest age in each nucleus (one dot per person inside a box in the nucleus color) (and age at death when `death_date` is filled in), % of women and men, people per generation and per nucleus, how many generations each nucleus spans, and the female/male ratio overall and per nucleus — grouped into a **Gênero** and a **Geração** section. Only family members are counted — the founders (oldest generation) and their descendants; partners who married in and placeholders are left out.
 - **Photos (optional)** — upload a folder of JPG/PNG files; each photo is cropped to a circle automatically. People without a photo show the initial of their name.
 - **Missing parents handled** — a parent or partner named in the CSV who has no row of their own gets a placeholder so no branch is left dangling in the drawing. Placeholders are not searchable or clickable.
 - **Built-in example** — the **Usar CSV exemplo** button in the start-up modal loads a sample family so you can try the app without preparing any data.
@@ -39,10 +39,9 @@ Comma-separated, UTF-8 encoded (so accents work), with these column names in the
 | `sex`          |   yes    | `M` or `F`.                                                                                          |
 | `generation`   |   yes    | Integer: `1` for the oldest generation, `2` for their children, and so on.                           |
 | `nucleus`      |   yes    | Name of the family branch. Determines the person's color.                                            |
-| `birth_year`   |   yes    | Year of birth. May be left empty if `birth_date` is filled in.                                       |
+| `birth_date`   |   yes    | Date of birth, either full (`DD/MM/YYYY`) or just the year (`YYYY`). Full dates feed the birthdays.  |
 | `short_name`   |    no    | How the name appears inside the circle. Empty: the first name is used.                               |
-| `birth_date`   |    no    | Full date as `YYYY-MM-DD` or `DD/MM/YYYY`. Shown as a birthday on the card.                          |
-| `death_year`   |    no    | Year of death.                                                                                       |
+| `death_date`   |    no    | Date of death, also `DD/MM/YYYY` or `YYYY`. Empty: the person is considered alive.                   |
 | `mother_name`  |    no    | Mother's full name, spelled exactly as in her own `name` cell.                                       |
 | `father_name`  |    no    | Father's full name, same rule.                                                                       |
 | `partner_name` |    no    | Partner's full name, same rule.                                                                      |
@@ -55,10 +54,10 @@ If siblings share a mother who has no row of her own, write `placeholder_1` in `
 Example:
 
 ```csv
-name,sex,generation,nucleus,birth_year,short_name,birth_date,death_year,mother_name,father_name,partner_name,image_file
-Maria Cavalcante,F,1,Fundadores,1940,Maria,12/03/1940,,,,Fulano da Silva,maria.jpg
-Fulano da Silva,M,1,Fundadores,1938,Fulano,,2010,,,Maria Cavalcante,fulano.jpg
-Ana da Silva,F,2,Ramo Ana,1965,Ana,1965-07-09,,Maria Cavalcante,Fulano da Silva,,ana.png
+name,sex,generation,nucleus,birth_date,short_name,death_date,mother_name,father_name,partner_name,image_file
+Maria Cavalcante,F,1,Fundadores,12/03/1940,Maria,,,,Fulano da Silva,maria.jpg
+Fulano da Silva,M,1,Fundadores,1938,Fulano,21/08/2010,,,Maria Cavalcante,fulano.jpg
+Ana da Silva,F,2,Ramo Ana,09/07/1965,Ana,,Maria Cavalcante,Fulano da Silva,,ana.png
 ```
 
 A larger sample lives in [tests/fixtures/family_sample.csv](tests/fixtures/family_sample.csv).

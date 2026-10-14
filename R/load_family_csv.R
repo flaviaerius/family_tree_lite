@@ -1,27 +1,29 @@
-CSV_REQUIRED_COLS <- c("name", "sex", "generation", "nucleus", "birth_year")
+CSV_REQUIRED_COLS <- c("name", "sex", "generation", "nucleus", "birth_date")
 CSV_OPTIONAL_COLS <- c(
   "short_name",
-  "birth_date",
-  "death_year",
+  "death_date",
   "mother_name",
   "father_name",
   "partner_name",
   "image_file"
 )
 
-# `birth_date` é opcional e serve ao cartão da barra lateral, que mostra o dia do
-# aniversário quando ele existe. Aceita AAAA-MM-DD e DD/MM/AAAA; o que não casar
-# com nenhum formato vira NA e a pessoa continua sendo mostrada só pelo ano.
-parse_birth_date <- function(x) {
+# `birth_date` e `death_date` aceitam a data completa (DD/MM/AAAA) ou só o ano
+# (AAAA). Devolve o ano sempre que dá para tirá-lo e a data só quando ela veio
+# completa; o que não casar com nenhum formato vira NA nos dois.
+parse_partial_date <- function(x) {
   x <- trimws(as.character(x))
-  out <- as.Date(rep(NA_character_, length(x)))
+  date <- as.Date(rep(NA_character_, length(x)))
   pending <- !is.na(x) & nzchar(x)
-  for (fmt in c("%Y-%m-%d", "%d/%m/%Y", "%Y/%m/%d", "%d-%m-%Y")) {
+  for (fmt in c("%d/%m/%Y", "%Y-%m-%d")) {
     if (!any(pending)) break
-    out[pending] <- as.Date(x[pending], format = fmt)
-    pending <- pending & is.na(out)
+    date[pending] <- as.Date(x[pending], format = fmt)
+    pending <- pending & is.na(date)
   }
-  out
+  year <- as.integer(format(date, "%Y"))
+  year_only <- pending & grepl("^[0-9]{4}$", x)
+  year[year_only] <- as.integer(x[year_only])
+  list(date = date, year = year)
 }
 
 load_family_csv <- function(path) {
@@ -58,16 +60,15 @@ load_family_csv <- function(path) {
   }
 
   raw$generation <- suppressWarnings(as.integer(raw$generation))
-  raw$birth_year <- suppressWarnings(as.integer(raw$birth_year))
-  raw$death_year <- suppressWarnings(as.integer(raw$death_year))
 
-  raw$birth_date <- parse_birth_date(raw$birth_date)
-  derive_year <- is.na(raw$birth_year) & !is.na(raw$birth_date)
-  if (any(derive_year)) {
-    raw$birth_year[derive_year] <- as.integer(
-      format(raw$birth_date[derive_year], "%Y")
-    )
-  }
+  # O resto do app ordena e rotula pelo ano; a data completa fica para o
+  # aniversário e para a idade exata.
+  birth <- parse_partial_date(raw$birth_date)
+  death <- parse_partial_date(raw$death_date)
+  raw$birth_date <- birth$date
+  raw$birth_year <- birth$year
+  raw$death_date <- death$date
+  raw$death_year <- death$year
 
   dup <- raw$name[duplicated(raw$name)]
   if (length(dup) > 0) {

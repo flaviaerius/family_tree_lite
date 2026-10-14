@@ -72,10 +72,11 @@ MESES_PT <- c(
 )
 
 # "14 de março de 1992" quando há data completa; cai para "1992" quando só o ano
-# foi preenchido, e para "" quando não há nem um nem outro.
-format_birthday_pt <- function(birth_date, birth_year) {
-  if (length(birth_date) == 1L && !is.na(birth_date)) {
-    d <- as.Date(birth_date)
+# foi preenchido, e para "" quando não há nem um nem outro. Serve tanto ao
+# nascimento quanto ao falecimento.
+format_date_pt <- function(date, year) {
+  if (length(date) == 1L && !is.na(date)) {
+    d <- as.Date(date)
     return(paste0(
       as.integer(format(d, "%d")),
       " de ",
@@ -84,8 +85,8 @@ format_birthday_pt <- function(birth_date, birth_year) {
       format(d, "%Y")
     ))
   }
-  if (length(birth_year) == 1L && !is.na(birth_year)) {
-    return(as.character(birth_year))
+  if (length(year) == 1L && !is.na(year)) {
+    return(as.character(year))
   }
   ""
 }
