@@ -1,5 +1,8 @@
-CSV_REQUIRED_COLS <- c("name", "sex", "generation", "nucleus", "birth_date")
+CSV_REQUIRED_COLS <- c("name", "sex", "nucleus", "birth_date")
+# `generation` vazia (ou a coluna toda ausente) é calculada pela árvore: ver
+# R/generations.R.
 CSV_OPTIONAL_COLS <- c(
+  "generation",
   "short_name",
   "death_date",
   "mother_name",
@@ -75,7 +78,12 @@ load_family_csv <- function(path) {
     stop("Nomes completos duplicados: ", paste(unique(dup), collapse = ", "))
   }
 
+  # Antes dos placeholders: eles herdam a geração de quem os cita.
+  gens <- fill_generations(raw)
+
   # Cria as linhas dos co-genitores citados mas ausentes, para que nenhum ramo
   # fique solto no desenho (ver R/placeholders.R).
-  add_placeholder_parents(tibble::as_tibble(raw))
+  family <- add_placeholder_parents(tibble::as_tibble(gens$family))
+  attr(family, "generation_report") <- gens[c("filled", "divergent")]
+  family
 }

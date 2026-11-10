@@ -21,6 +21,8 @@ Nothing is stored on the server: the CSV and photos you upload live only in your
 - **Focused tree** — click a person's card to open a zoomed view with just that person, their parents, partner and children.
 - **Click to explore** — clicking a circle in the overview fills the sidebar card, the same as searching.
 - **Family analytics** — the **Análises** tab summarizes the family: number of people, generations and nuclei, mean age of living people, the youngest and oldest age in each nucleus (one dot per person inside a box in the nucleus color) (and age at death when `death_date` is filled in), % of women and men, people per generation and per nucleus, how many generations each nucleus spans, and the female/male ratio overall and per nucleus — grouped into a **Gênero** and a **Geração** section. Only family members are counted — the founders (oldest generation) and their descendants; partners who married in and placeholders are left out.
+- **Kinship** — the **Parentesco** tab takes two people (type part of a name and pick the full name) and says how they are related, both ways: "mãe", "primo de primeiro grau", "tia-avó", "tataravó", "padrasto", "sogra", "cunhado"… It uses Brazilian everyday naming (a parent's first cousin is a "tio de segundo grau", a first cousin's child a "sobrinho de segundo grau") and also shows the common ancestors, the degree under the Civil Code and the path between the two people in the tree. In-laws and step-relatives come from the current `partner_name`; people who share a child but are not current partners show as ex-partners.
+- **Generations from the tree** — the `generation` column is optional: empty cells (or the whole column left out) are computed from `mother_name`/`father_name` — a child is one generation below their mother and father — with partners, and people who had a child together, on the same generation. Generation 1 is the oldest person with a row of their own; a partner's ancestors are placed above the partner. Values already in the CSV are kept, and the load modal lists people whose generation doesn't match the tree.
 - **Photos (optional)** — upload a folder of JPG/PNG files; each photo is cropped to a circle automatically. People without a photo show the initial of their name.
 - **Missing parents handled** — a parent or partner named in the CSV who has no row of their own gets a placeholder so no branch is left dangling in the drawing. Placeholders are not searchable or clickable.
 - **Built-in example** — the **Usar CSV exemplo** button in the start-up modal loads a sample family so you can try the app without preparing any data.
@@ -37,7 +39,7 @@ Comma-separated, UTF-8 encoded (so accents work), with these column names in the
 | -------------- | :------: | ---------------------------------------------------------------------------------------------------- |
 | `name`         |   yes    | Full name. It is the key: it must be unique, and mother/father/partner are linked through it.        |
 | `sex`          |   yes    | `M` or `F`.                                                                                          |
-| `generation`   |   yes    | Integer: `1` for the oldest generation, `2` for their children, and so on.                           |
+| `generation`   |    no    | Integer: `1` for the oldest generation, `2` for their children, and so on. Empty: computed from the tree (see below). |
 | `nucleus`      |   yes    | Name of the family branch. Determines the person's color.                                            |
 | `birth_date`   |   yes    | Date of birth, either full (`DD/MM/YYYY`) or just the year (`YYYY`). Full dates feed the birthdays.  |
 | `short_name`   |    no    | How the name appears inside the circle. Empty: the first name is used.                               |
@@ -144,6 +146,9 @@ R/
   plot_overview.R      Plotly figure for the overview
   plot_focused.R       Plotly figure for the focused tree
   person_card.R        Sidebar card for the selected person
+  kinship.R            Kinship between two people (blood, spouses, in-laws)
+  kinship_card.R       Result card for the Parentesco tab
+  generations.R        Generation computed from mother/father/partner links
   uploaded_images.R    Matches uploaded photos to people, per session
   crop_circle.R        Crops photos into circles
   images.R             Base64 image helpers

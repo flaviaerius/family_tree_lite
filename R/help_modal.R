@@ -172,7 +172,7 @@ help_modal <- function() {
       tags$tbody(
         help_col_row("name", TRUE, "Nome completo. É a chave: precisa ser único e é por ele que mãe, pai e cônjuge são ligados."),
         help_col_row("sex", TRUE, HTML("<code>M</code> ou <code>F</code>.")),
-        help_col_row("generation", TRUE, "Número inteiro: 1 para a geração mais antiga, 2 para os filhos dela, e assim por diante."),
+        help_col_row("generation", FALSE, "Número inteiro: 1 para a geração mais antiga, 2 para os filhos dela, e assim por diante. Vazio: é calculada pela árvore — filho fica uma geração abaixo da mãe e do pai, e cônjuges ficam na mesma geração."),
         help_col_row("nucleus", TRUE, "Nome do ramo da família. Define a cor da pessoa no desenho."),
         help_col_row("birth_date", TRUE, HTML("Data de nascimento, completa (<code>DD/MM/AAAA</code>) ou só o ano (<code>AAAA</code>). Com a data completa, a pessoa aparece nos aniversários do mês.")),
         help_col_row("short_name", FALSE, "Como o nome aparece dentro da bola. Vazio: usa o primeiro nome."),

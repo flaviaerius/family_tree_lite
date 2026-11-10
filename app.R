@@ -38,7 +38,6 @@ ui <- bslib::page_navbar(
     )
   ),
 
-
   bslib::nav_panel(
     title = "Árvore",
     # CSV e fotos entram só pelo modal (R/help_modal.R); a barra lateral fica
@@ -69,11 +68,56 @@ ui <- bslib::page_navbar(
     uiOutput("stats_panel")
   ),
 
+  bslib::nav_panel(
+    title = "Parentesco",
+    # As caixas ficam fixas na página (e não dentro de um renderUI) para o
+    # updateSelectizeInput do CSV encontrá-las mesmo com a aba fechada.
+    bslib::card(
+      class = "mb-3 h-100",
+      bslib::card_body(
+        bslib::layout_columns(
+          col_widths = c(5, 2, 5),
+          fill = FALSE,
+          selectizeInput(
+            "kin_a",
+            "Pessoa 1",
+            choices = NULL,
+            width = "100%",
+            options = list(placeholder = "Digite um nome")
+          ),
+          tags$div(
+            class = "d-flex justify-content-center align-items-end h-100 pb-3",
+            actionButton(
+              "kin_swap",
+              NULL,
+              icon = icon("right-left"),
+              class = "btn-outline-secondary",
+              title = "Trocar as duas pessoas"
+            )
+          ),
+          selectizeInput(
+            "kin_b",
+            "Pessoa 2",
+            choices = NULL,
+            width = "100%",
+            options = list(placeholder = "Digite um nome")
+          )
+        )
+      )
+    ),
+    uiOutput("kinship_result")
+  ),
+
   # Depois do painel e do espaçador: a aba fica à esquerda e o atalho para o
   # modal de instruções (R/help_modal.R) encosta na direita da barra.
   bslib::nav_spacer(),
   bslib::nav_item(
-    actionLink("open_start", "Carregar dados", icon = icon("upload"), class = "nav-link")
+    actionLink(
+      "open_start",
+      "Carregar dados",
+      icon = icon("upload"),
+      class = "nav-link"
+    )
   ),
   bslib::nav_item(
     actionLink("show_help", "Como usar", class = "nav-link")
@@ -154,7 +198,12 @@ server <- function(input, output, session) {
     fam <- csv_family()
     n_photos <- NROW(photo_uploads())
     if (!is.null(err)) {
-      return(tags$div(class = "text-danger small", icon("circle-xmark"), " ", err))
+      return(tags$div(
+        class = "text-danger small",
+        icon("circle-xmark"),
+        " ",
+        err
+      ))
     }
     if (is.null(fam) && n_photos == 0) {
       return(NULL)
@@ -163,10 +212,21 @@ server <- function(input, output, session) {
       class = "small",
       style = "color:#1E5A3A;",
       if (!is.null(fam)) {
-        tags$div(icon("circle-check"), " ", sum(!fam$is_placeholder), " pessoas carregadas")
+        tags$div(
+          icon("circle-check"),
+          " ",
+          sum(!fam$is_placeholder),
+          " pessoas carregadas"
+        )
       },
+      generation_status_ui(attr(fam, "generation_report")),
       if (n_photos > 0) {
-        tags$div(icon("circle-check"), " ", n_photos, if (n_photos == 1) " foto" else " fotos")
+        tags$div(
+          icon("circle-check"),
+          " ",
+          n_photos,
+          if (n_photos == 1) " foto" else " fotos"
+        )
       }
     )
   })
@@ -189,6 +249,20 @@ server <- function(input, output, session) {
       )
     } else {
       updateSelectizeInput(session, "name", choices = NULL)
+    }
+    # Na aba de parentesco as opções vão todas para o navegador: o selectize
+    # filtra enquanto se digita, inclusive sem acento.
+    for (id in c("kin_a", "kin_b")) {
+      updateSelectizeInput(
+        session,
+        id,
+        choices = if (is.null(fam)) {
+          character(0)
+        } else {
+          c("", searchable_names(fam))
+        },
+        selected = ""
+      )
     }
   })
 
@@ -226,7 +300,9 @@ server <- function(input, output, session) {
   }
 
   observeEvent(plotly::event_data("plotly_click", source = "overview"), {
-    select_person(plotly::event_data("plotly_click", source = "overview")$customdata)
+    select_person(
+      plotly::event_data("plotly_click", source = "overview")$customdata
+    )
   })
   observeEvent(input$birthday_pick, select_person(input$birthday_pick))
 
@@ -250,7 +326,11 @@ server <- function(input, output, session) {
     view <- if (birthday_offset() == 0L) {
       first_of_month
     } else {
-      seq(first_of_month, by = paste(birthday_offset(), "months"), length.out = 2)[2]
+      seq(
+        first_of_month,
+        by = paste(birthday_offset(), "months"),
+        length.out = 2
+      )[2]
     }
     birthday_card_ui(fam, view = view, today = today)
   })
@@ -287,7 +367,9 @@ server <- function(input, output, session) {
     n_pending <- sum(fam$is_placeholder)
     if (n_pending > 0) {
       paste0(
-        n_real, " pessoas carregadas (", n_pending,
+        n_real,
+        " pessoas carregadas (",
+        n_pending,
         " co-genitores citados ainda sem ficha na planilha)."
       )
     } else {
@@ -377,8 +459,12 @@ server <- function(input, output, session) {
     age_detail <- paste0("entre ", o$n_age_alive, " pessoas vivas")
     if (o$n_age_death > 0) {
       age_detail <- paste0(
-        age_detail, " · ao falecer: ", format_num(o$mean_age_death, 0),
-        " anos (", o$n_age_death, ")"
+        age_detail,
+        " · ao falecer: ",
+        format_num(o$mean_age_death, 0),
+        " anos (",
+        o$n_age_death,
+        ")"
       )
     }
 
@@ -432,7 +518,11 @@ server <- function(input, output, session) {
           fill = FALSE,
           gap = "2rem",
           stats_chart("Pessoas por geração", "stats_by_generation", top_height),
-          stats_chart("Proporção feminino/masculino por núcleo", "stats_sex_by_nucleus", top_height)
+          stats_chart(
+            "Proporção feminino/masculino por núcleo",
+            "stats_sex_by_nucleus",
+            top_height
+          )
         )
       ),
       stats_section(
@@ -443,7 +533,11 @@ server <- function(input, output, session) {
           fill = FALSE,
           gap = "2rem",
           stats_chart("Pessoas por núcleo", "stats_by_nucleus", nucleus_height),
-          stats_chart("Gerações em cada núcleo", "stats_generations_by_nucleus", nucleus_height)
+          stats_chart(
+            "Gerações em cada núcleo",
+            "stats_generations_by_nucleus",
+            nucleus_height
+          )
         ),
         stats_chart(
           "Idades por núcleo (pessoas vivas)",
@@ -455,9 +549,44 @@ server <- function(input, output, session) {
         class = "mb-4",
         "Contam só as pessoas da família: os fundadores (a geração mais antiga) ",
         "e seus descendentes. Cônjuges e pais citados sem linha própria ficam ",
-        "de fora. Quem não tem ", tags$code("death_date"), " é considerado vivo."
+        "de fora. Quem não tem ",
+        tags$code("death_date"),
+        " é considerado vivo."
       )
     )
+  })
+
+  # --- Aba de parentesco ---
+  observeEvent(input$kin_swap, {
+    a <- input$kin_a
+    b <- input$kin_b
+    updateSelectizeInput(session, "kin_a", selected = b)
+    updateSelectizeInput(session, "kin_b", selected = a)
+  })
+
+  output$kinship_result <- renderUI({
+    fam <- csv_family()
+    if (is.null(fam)) {
+      return(bslib::card(
+        bslib::card_body(
+          class = "text-center text-muted py-5",
+          "Clique em ",
+          tags$b("Carregar dados"),
+          ", na barra superior, para escolher o CSV (ou usar o exemplo)."
+        )
+      ))
+    }
+    a <- input$kin_a
+    b <- input$kin_b
+    if (is.null(a) || !nzchar(a) || is.null(b) || !nzchar(b)) {
+      return(bslib::card(
+        bslib::card_body(
+          class = "text-center text-muted py-4",
+          "Escolha duas pessoas para ver o grau de parentesco entre elas."
+        )
+      ))
+    }
+    kinship_card_ui(fam, a, b)
   })
 
   output$stats_by_generation <- renderPlotly(plot_people_by_generation(stats()))
